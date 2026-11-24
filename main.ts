@@ -1,9 +1,12 @@
-import { copyFileSync, existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // The entry image ships in the repository as entry.png (drawn by gen.py).
-// This program validates it and copies it to the output directory.
-const src = join(process.cwd(), "entry.png");
+// Resolve it relative to this script's own location, NOT process.cwd():
+// the grader runs `node /bot/main.ts` from a different working directory.
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const src = join(scriptDir, "entry.png");
 if (!existsSync(src)) {
   throw new Error("entry.png not found next to main.ts");
 }
@@ -27,5 +30,6 @@ if (buf.length > 1024 * 1024) {
 }
 
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+mkdirSync(outDir, { recursive: true });
 copyFileSync(src, join(outDir, "entry.png"));
 console.log(`wrote ${join(outDir, "entry.png")} (${width}x${height}, ${buf.length} bytes)`);
